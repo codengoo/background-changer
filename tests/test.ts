@@ -1,34 +1,30 @@
-import { setWallpaper } from "../src/index";
-import path from "path";
+import { setWallpaper, FillMode } from "../src/index";
 
 async function runTest() {
-  console.log("Testing wallpaper changer...");
-
-  // For manual testing, you need an actual image.
-  // We'll try to find a system image or ask the user to provide one.
-  // As a default, we'll just check if the logic fails gracefully if file is missing,
-  // or use a placeholder if we had one.
-
-  const dummyPath = path.resolve("non_existent_image.jpg");
-
-  try {
-    await setWallpaper(dummyPath);
-  } catch (err: any) {
-    console.log(`Expected error caught: ${err.message}`);
-  }
-
-  console.log("\nTo test with a real image, run:");
-  console.log("npx ts-node tests/test.ts path/to/your/image.jpg");
+  console.log("Testing wallpaper changer with koffi...");
 
   const argPath = process.argv[2];
+  const modeArg = process.argv[3] as FillMode;
+
   if (argPath) {
-    console.log(`\nAttempting to set wallpaper to: ${argPath}`);
+    const mode =
+      modeArg && Object.values(FillMode).includes(modeArg)
+        ? modeArg
+        : FillMode.Fill;
+    console.log(
+      `\nAttempting to set wallpaper to: ${argPath} with mode: ${mode}`,
+    );
     try {
-      await setWallpaper(argPath);
+      await setWallpaper(argPath, { mode });
       console.log("Success!");
     } catch (err: any) {
       console.error(`Failed: ${err.message}`);
     }
+  } else {
+    console.log("\nTo test with a real image, run:");
+    console.log(
+      "npx ts-node tests/test.ts path/to/your/image.jpg [Fill|Fit|Stretch|Tile|Center|Span]",
+    );
   }
 }
 

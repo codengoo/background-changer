@@ -1,12 +1,13 @@
-# Windows Background Changer
+# Windows Background Changer (Core)
 
-A lightweight Node.js library to change the Windows desktop wallpaper using a bundled native C# executable.
+A modern, fast, and lightweight Node.js library to change the Windows desktop wallpaper using direct FFI with `koffi`. Supports various fill modes.
 
 ## Features
 
-- Simple TypeScript API.
-- No heavy dependencies.
-- Bundled native C# implementation for reliable interaction with the Windows API (`SystemParametersInfo`).
+- **Direct FFI**: Calls Windows `SystemParametersInfoW` directly via `koffi`.
+- **Fill Modes**: Supports `Fill`, `Fit`, `Stretch`, `Tile`, `Center`, and `Span`.
+- **Typings Included**: Clean TypeScript definitions generated via `tsup`.
+- **ESM & CJS Support**: Dual-format build for modern and legacy projects.
 
 ## Installation
 
@@ -17,11 +18,16 @@ npm install windows-background-changer
 ## Usage
 
 ```typescript
-import { setWallpaper } from "windows-background-changer";
+import { setWallpaper, FillMode } from "windows-background-changer";
 
 async function main() {
   try {
-    await setWallpaper("C:\\path\\to\\your\\image.jpg");
+    // Basic usage
+    await setWallpaper("C:\\path\\to\\image.jpg");
+
+    // With specific fill mode
+    await setWallpaper("C:\\path\\to\\image.jpg", { mode: FillMode.Fit });
+
     console.log("Wallpaper changed successfully!");
   } catch (error) {
     console.error("Failed to change wallpaper:", error);
@@ -31,21 +37,23 @@ async function main() {
 main();
 ```
 
-## Built-in Executable
+### Supported Fill Modes
 
-This library includes a pre-built C# executable (`WallpaperChanger.exe`) that performs the actual system call.
-The source code for this executable is located in the `native/` directory.
+- `FillMode.Fill`: Fills the screen, may crop.
+- `FillMode.Fit`: Fits the image inside the screen, avoids cropping.
+- `FillMode.Stretch`: Stretches image to fill screen.
+- `FillMode.Center`: Centers image on screen.
+- `FillMode.Tile`: Tiles image across screen.
+- `FillMode.Span`: Spans image across multiple monitors.
 
 ## Development
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/)
-- [.NET SDK](https://dotnet.microsoft.com/download) (to build the native component)
+- [Node.js](https://nodejs.org/) (Compatible with v18+)
+- [Windows OS](https://www.microsoft.com/windows) (Native API required)
 
 ### Build
-
-To build both the C# executable and the TypeScript code:
 
 ```bash
 npm run build
@@ -53,10 +61,12 @@ npm run build
 
 ### Test
 
-To test the library with a local image:
-
 ```bash
-npm test -- path/to/your/image.jpg
+# Basic test (checks if file exists)
+npm test
+
+# Real test (changes actual wallpaper)
+npm test -- path/to/your/image.jpg [Fill|Fit|Stretch|Tile|Center|Span]
 ```
 
 ## License

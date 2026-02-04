@@ -1,16 +1,74 @@
-import { execFile } from "child_process";
+import koffi from "koffi";
 import path from "path";
 import fs from "fs";
+import { exec } from "child_process";
 import { promisify } from "util";
 
-const execFileAsync = promisify(execFile);
+const execAsync = promisify(exec);
+
+/**
+ * Wallpaper fill modes for Windows.
+ */
+export enum FillMode {
+  Center = "Center",
+  Tile = "Tile",
+  Stretch = "Stretch",
+  Fit = "Fit",
+  Fill = "Fill",
+  Span = "Span",
+}
+
+const FillModeRegistry: Record<FillMode, { style: string; tile: string }> = {
+  [FillMode.Center]: { style: "0", tile: "0" },
+  [FillMode.Tile]: { style: "0", tile: "1" },
+  [FillMode.Stretch]: { style: "2", tile: "0" },
+  [FillMode.Fit]: { style: "6", tile: "0" },
+  [FillMode.Fill]: { style: "10", tile: "0" },
+  [FillMode.Span]: { style: "22", tile: "0" },
+};
+
+// Load user32.dll
+const user32 = koffi.load("user32.dll");
+
+// Define SystemParametersInfoW
+const SystemParametersInfoW = user32.func(
+  "int __stdcall SystemParametersInfoW(uint uAction, uint uParam, string16 lpvParam, uint fuWinIni)",
+);
+
+const SPI_SETDESKWALLPAPER = 0x0014;
+const SPIF_UPDATEINIFILE = 0x01;
+const SPIF_SENDWININICHANGE = 0x02;
+
+/**
+ * Updates the Windows Registry to set the wallpaper fill mode.
+ * @param mode The fill mode to set.
+ */
+async function setRegistryFillMode(mode: FillMode): Promise<void> {
+  const config = FillModeRegistry[mode];
+  const desktopKey = '"HKCU\\Control Panel\\Desktop"';
+
+  try {
+    await execAsync(
+      `reg add ${desktopKey} /v WallpaperStyle /t REG_SZ /d ${config.style} /f`,
+    );
+    await execAsync(
+      `reg add ${desktopKey} /v TileWallpaper /t REG_SZ /d ${config.tile} /f`,
+    );
+  } catch (error: any) {
+    throw new Error(`Failed to update registry: ${error.message}`);
+  }
+}
 
 /**
  * Changes the Windows desktop wallpaper.
  * @param imagePath Absolute path to the image file.
+ * @param options Optional configuration including fill mode.
  * @returns A promise that resolves when the wallpaper is changed.
  */
-export async function setWallpaper(imagePath: string): Promise<void> {
+export async function setWallpaper(
+  imagePath: string,
+  options: { mode?: FillMode } = {},
+): Promise<void> {
   if (!imagePath) {
     throw new Error("Image path is required.");
   }
@@ -21,33 +79,23 @@ export async function setWallpaper(imagePath: string): Promise<void> {
     throw new Error(`Image file not found: ${absoluteImagePath}`);
   }
 
-  // Resolve the path to the bundled executable
-  // In development (ts-node), it's in bin/
-  // In production (npm package), it will also be in bin/ relative to the package root
-  let exePath = path.join(__dirname, "..", "bin", "WallpaperChanger.exe");
-
-  // If we are in 'dist', __dirname is 'dist', so '..' goes back to root
-  // If we are running via ts-node from 'src', __dirname is 'src', so '..' goes back to root
-
-  if (!fs.existsSync(exePath)) {
-    // Fallback for different structures if necessary
-    exePath = path.resolve(process.cwd(), "bin", "WallpaperChanger.exe");
-  }
-
-  if (!fs.existsSync(exePath)) {
-    throw new Error(`WallpaperChanger.exe not found at ${exePath}`);
+  // Set fill mode in registry if provided
+  if (options.mode) {
+    await setRegistryFillMode(options.mode);
   }
 
   try {
-    const { stdout, stderr } = await execFileAsync(exePath, [
+    // Call the Windows API
+    const result = SystemParametersInfoW(
+      SPI_SETDESKWALLPAPER,
+      0,
       absoluteImagePath,
-    ]);
+      SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE,
+    );
 
-    if (stderr) {
-      console.warn(`WallpaperChanger stderr: ${stderr}`);
+    if (result === 0) {
+      throw new Error("SystemParametersInfoW failed to set wallpaper.");
     }
-
-    // The C# app returns 0 on success. execFileAsync will throw if it returns non-zero.
   } catch (error: any) {
     throw new Error(`Failed to change wallpaper: ${error.message}`);
   }
