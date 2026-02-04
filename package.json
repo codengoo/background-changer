@@ -1,24 +1,21 @@
 {
-  "name": "windows-background-changer",
+  "name": "@nghiavuive/windows-background-changer",
   "version": "1.0.0",
-  "description": "A node library to change Windows wallpaper using a native C# executable.",
+  "description": "A node library to change Windows wallpaper using Windows native APIs.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "files": [
-    "dist",
-    "bin"
+    "dist"
   ],
   "scripts": {
-    "build:ts": "tsup src/index.ts --format cjs,esm --dts --clean --external koffi",
-    "build": "npm run build:ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external koffi",
     "test": "ts-node tests/test.ts",
     "prepublishOnly": "npm run build"
   },
@@ -29,17 +26,15 @@
     "changer",
     "native"
   ],
-  "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "dependencies": {
+    "koffi": "^2.15.1"
+  },
   "devDependencies": {
     "@types/node": "^25.2.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.4.0",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "koffi": "^2.15.1",
-    "ref-napi": "^3.0.3"
   }
 }
