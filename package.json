@@ -1,0 +1,42 @@
+{
+  "name": "windows-background-changer",
+  "version": "1.0.0",
+  "description": "A node library to change Windows wallpaper using a native C# executable.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "build:native": "dotnet publish native/WallpaperChanger/WallpaperChanger.csproj -c Release -o bin/ --runtime win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true",
+    "build:ts": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "build": "npm run build:native && npm run build:ts",
+    "test": "ts-node tests/test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "windows",
+    "wallpaper",
+    "background",
+    "changer",
+    "native"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.2.0",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3"
+  }
+}
