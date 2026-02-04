@@ -17,7 +17,7 @@
     "bin"
   ],
   "scripts": {
-    "build:native": "dotnet publish native/WallpaperChanger/WallpaperChanger.csproj -c Release -o bin/ --runtime win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true",
+    "build:native": "dotnet publish native/WallpaperChanger/WallpaperChanger.csproj -c Release -o bin/ --runtime win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:EnableCompressionInSingleFile=true",
     "build:ts": "tsup src/index.ts --format cjs,esm --dts --clean",
     "build": "npm run build:native && npm run build:ts",
     "test": "ts-node tests/test.ts",
